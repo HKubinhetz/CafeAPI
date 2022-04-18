@@ -31,10 +31,10 @@ def home():
 
 
 @app.route("/random", methods=["GET", "POST"])
-def random():
+def get_random_cafe():
     query_answer = db.session.query(Cafe).all()
-    print(query_answer)
-    return random.choice(query_answer)
+    random_cafe = random.choice(query_answer)
+    return f"{random_cafe.name}"
 
 
 # HTTP GET - Read Record
