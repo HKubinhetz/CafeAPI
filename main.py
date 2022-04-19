@@ -25,8 +25,27 @@ class Cafe(db.Model):
     coffee_price = db.Column(db.String(250), nullable=True)
 
 
-def create_cafe_json(cafe):
-    cafe_json = jsonify(cafe={
+# Todo improve JSON types to facilitate utilisation
+def create_json(cafe):
+    if type(cafe) == list:
+        if not cafe:
+            # List is Empty = No search queries found!
+            error_json = jsonify(error={
+                    "Not Found": "Sorry, no cafes were found at that location",
+                }
+            )
+            return error_json
+        else:
+            # List is not Empty!
+            cafe_json = jsonify(cafe=cafe)
+            return cafe_json
+    else:
+        cafe_json = jsonify(cafe=cafe)
+    return cafe_json
+
+
+def cafe_to_dict(cafe):
+    cafe_dict = {
         "id": cafe.id,
         "name": cafe.name,
         "map_url": cafe.map_url,
@@ -39,8 +58,8 @@ def create_cafe_json(cafe):
         "can_take_calls": cafe.can_take_calls,
         "coffee_price": cafe.coffee_price,
     }
-    )
-    return cafe_json
+
+    return cafe_dict
 
 
 @app.route("/")
@@ -51,18 +70,35 @@ def home():
 @app.route("/random", methods=["GET", "POST"])
 def get_random_cafe():
     query_answer = db.session.query(Cafe).all()
-    random_cafe = create_cafe_json(random.choice(query_answer))
-    return random_cafe
+    random_cafe = random.choice(query_answer)
+    cafe_json = create_json(cafe_to_dict(random_cafe))
+    return cafe_json
 
 
-# HTTP GET - Read Record
+@app.route("/all", methods=["GET", "POST"])
+def get_all_cafes():
+    query_answer = db.session.query(Cafe).all()
+    cafe_list = []
+
+    for cafe in query_answer:
+        cafe_info = cafe_to_dict(cafe)
+        cafe_list.append(cafe_info)
+    cafe_list_json = create_json(cafe_list)
+
+    return cafe_list_json
 
 
-# HTTP POST - Create Record
+@app.route("/search")
+def search_cafe():
+    location = request.args.get('location')
+    query_answer = db.session.query(Cafe).filter(Cafe.location == location).all()
+    cafe_list = []
+    for cafe in query_answer:
+        cafe_info = cafe_to_dict(cafe)
+        cafe_list.append(cafe_info)
+    cafe_list_json = create_json(cafe_list)
 
-# HTTP PUT/PATCH - Update Record
-
-# HTTP DELETE - Delete Record
+    return cafe_list_json
 
 
 if __name__ == '__main__':
