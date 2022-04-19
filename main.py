@@ -101,5 +101,10 @@ def search_cafe():
     return cafe_list_json
 
 
+@app.route("/add", methods=["POST"])
+def add_cafe():
+    return "API add is working!"
+
+
 if __name__ == '__main__':
     app.run(debug=True)
