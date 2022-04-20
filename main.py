@@ -157,5 +157,34 @@ def add_cafe():
     )
 
 
+@app.route("/update-price/<cafe_id>", methods=["PATCH"])
+def update_price(cafe_id):
+    # Search query by ID then print here.
+    print(cafe_id)
+    # Fetch the price arguments
+    new_price = request.args.get('price')
+    print(new_price)
+
+    try:
+        # Query the correct Café by its id
+        selected_cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id).first()
+        print(selected_cafe.name)
+        # Update and commit!
+        print(selected_cafe.coffee_price)
+        selected_cafe.coffee_price = new_price
+        print(selected_cafe.coffee_price)
+        db.session.commit()
+        # TODO -  Query the JSON and print it out!
+        return jsonify(response={
+            "success": "Successfully updated a price for your Cafe!",
+            }
+        ), 200
+    except AttributeError:
+        return jsonify(error={
+            "Not Found": "Sorry! This Cafe was not found.",
+        }
+        ), 404
+
+
 if __name__ == '__main__':
     app.run(debug=True)
