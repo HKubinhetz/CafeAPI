@@ -103,6 +103,28 @@ def search_cafe():
 
 @app.route("/add", methods=["POST"])
 def add_cafe():
+    cafe_name = request.args.get('name')
+    cafe_map_url = request.args.get('map_url')
+    cafe_img_url = request.args.get('img_url')
+    cafe_location = request.args.get('location')
+    cafe_seats = request.args.get('seats')
+    cafe_has_toilet = request.args.get('has_toilet')
+    cafe_has_wifi = request.args.get('has_wifi')
+    cafe_has_sockets = request.args.get('has_sockets')
+    cafe_can_take_calls = request.args.get('can_take_calls')
+    cafe_coffee_price = request.args.get('coffee_price')
+
+    print(cafe_name)
+    print(cafe_map_url)
+    print(cafe_img_url)
+    print(cafe_location)
+    print(cafe_seats)
+    print(cafe_has_toilet)
+    print(cafe_has_wifi)
+    print(cafe_has_sockets)
+    print(cafe_can_take_calls)
+    print(cafe_coffee_price)
+
     return "API add is working!"
 
 
