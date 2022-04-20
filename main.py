@@ -31,8 +31,8 @@ def create_json(cafe):
         if not cafe:
             # List is Empty = No search queries found!
             error_json = jsonify(error={
-                    "Not Found": "Sorry, no cafes were found at that location",
-                }
+                "Not Found": "Sorry, no cafes were found at that location",
+            }
             )
             return error_json
         else:
@@ -60,6 +60,15 @@ def cafe_to_dict(cafe):
     }
 
     return cafe_dict
+
+
+def string_to_bool(string):
+    if string == "True" or string == "1":
+        return 1
+    elif string == "False" or string == "0":
+        return 0
+    else:
+        return "String is not a valid boolean value!"
 
 
 @app.route("/")
@@ -101,17 +110,17 @@ def search_cafe():
     return cafe_list_json
 
 
-@app.route("/add", methods=["POST"])
+@app.route("/add", methods=["GET", "POST"])
 def add_cafe():
     cafe_name = request.args.get('name')
     cafe_map_url = request.args.get('map_url')
     cafe_img_url = request.args.get('img_url')
     cafe_location = request.args.get('location')
     cafe_seats = request.args.get('seats')
-    cafe_has_toilet = request.args.get('has_toilet')
-    cafe_has_wifi = request.args.get('has_wifi')
-    cafe_has_sockets = request.args.get('has_sockets')
-    cafe_can_take_calls = request.args.get('can_take_calls')
+    cafe_has_toilet = string_to_bool(request.args.get('has_toilet'))                # Special Boolean Cases
+    cafe_has_wifi = string_to_bool(request.args.get('has_wifi'))
+    cafe_has_sockets = string_to_bool(request.args.get('has_sockets'))
+    cafe_can_take_calls = string_to_bool(request.args.get('can_take_calls'))
     cafe_coffee_price = request.args.get('coffee_price')
 
     print(cafe_name)
@@ -125,7 +134,27 @@ def add_cafe():
     print(cafe_can_take_calls)
     print(cafe_coffee_price)
 
-    return "API add is working!"
+    new_cafe = Cafe(name=cafe_name,
+                    map_url=cafe_map_url,
+                    img_url=cafe_img_url,
+                    location=cafe_location,
+                    seats=cafe_seats,
+                    has_toilet=cafe_has_toilet,
+                    has_wifi=cafe_has_wifi,
+                    has_sockets=cafe_has_sockets,
+                    can_take_calls=cafe_can_take_calls,
+                    coffee_price=cafe_coffee_price
+                    )
+
+    db.session.add(new_cafe)
+    print(new_cafe)
+    db.session.commit()
+
+    # TODO - Add this JSON response to the create_json in an ordely way! maybe create a "method" parameter.
+    return jsonify(response={
+        "success": "Successfully added a new cafe!",
+        }
+    )
 
 
 if __name__ == '__main__':
