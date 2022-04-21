@@ -2,6 +2,9 @@ from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 import random
 
+
+CAFE_API_KEY = "LoveYouBunnyPig0123"
+
 app = Flask(__name__)
 
 # Connect to Database
@@ -186,6 +189,32 @@ def update_price(cafe_id):
             "Not Found": "Sorry! This Cafe was not found.",
         }
         ), 404
+
+
+@app.route("/report-closed/<cafe_id>", methods=["DELETE"])
+def close_cafe(cafe_id):
+    key_check = True
+    # TODO - Implement a query by id here. Create a function.
+    # KUBINHA TIP - A NON EXISTING ID WILL RETURN "AttributeError: 'NoneType' object has no attribute 'name'"
+    selected_cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id).first()
+    print(selected_cafe.name)
+    # TODO - Implement a API Key check based on the constant.
+
+    if key_check and cafe_id:
+        return jsonify(response={
+            "success": "Successfully removed a closed Café!",
+        }
+        ), 200
+    elif not cafe_id:
+        return jsonify(error={
+            "Not Found": "Sorry! This Cafe was not found.",
+        }
+        ), 404
+    elif not key_check:
+        return jsonify(error={
+            "Not Allowed": "Sorry! You do not have a valid API Key to do this.",
+        }
+        ), 403
 
 
 if __name__ == '__main__':
