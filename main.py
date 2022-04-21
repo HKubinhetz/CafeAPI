@@ -175,11 +175,13 @@ def update_price(cafe_id):
         print(selected_cafe.coffee_price)
         db.session.commit()
         # TODO -  Query the JSON and print it out!
+        # TODO - Add this JSON response to the create_json in an ordely way! maybe create a "method" parameter.
         return jsonify(response={
             "success": "Successfully updated a price for your Cafe!",
             }
         ), 200
     except AttributeError:
+        # TODO - Add this JSON response to the create_json in an ordely way! maybe create a "method" parameter.
         return jsonify(error={
             "Not Found": "Sorry! This Cafe was not found.",
         }
