@@ -1,19 +1,21 @@
+# ---------------------------------- IMPORTS ----------------------------------
 from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 import random
 
 
+# --------------------------------- CONSTANTS ---------------------------------
 CAFE_API_KEY = "LoveYouBunnyPig0123"
 
-app = Flask(__name__)
 
-# Connect to Database
+# --------------------------------- APP CONFIG --------------------------------
+app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cafes.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
-# Cafe TABLE Configuration
+# --------------------------------- CAFE CLASS --------------------------------
 class Cafe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), unique=True, nullable=False)
@@ -28,6 +30,7 @@ class Cafe(db.Model):
     coffee_price = db.Column(db.String(250), nullable=True)
 
 
+# --------------------------------- FUNCTIONS ---------------------------------
 # Todo improve JSON types to facilitate utilisation
 def create_json(cafe):
     if type(cafe) == list:
@@ -74,6 +77,8 @@ def string_to_bool(string):
         return "String is not a valid boolean value!"
 
 
+# ---------------------------------- ROUTING ----------------------------------
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -115,6 +120,8 @@ def search_cafe():
 
 @app.route("/add", methods=["GET", "POST"])
 def add_cafe():
+
+    # TODO - Convert all these to a smaller function
     cafe_name = request.args.get('name')
     cafe_map_url = request.args.get('map_url')
     cafe_img_url = request.args.get('img_url')
@@ -125,17 +132,6 @@ def add_cafe():
     cafe_has_sockets = string_to_bool(request.args.get('has_sockets'))
     cafe_can_take_calls = string_to_bool(request.args.get('can_take_calls'))
     cafe_coffee_price = request.args.get('coffee_price')
-
-    print(cafe_name)
-    print(cafe_map_url)
-    print(cafe_img_url)
-    print(cafe_location)
-    print(cafe_seats)
-    print(cafe_has_toilet)
-    print(cafe_has_wifi)
-    print(cafe_has_sockets)
-    print(cafe_can_take_calls)
-    print(cafe_coffee_price)
 
     new_cafe = Cafe(name=cafe_name,
                     map_url=cafe_map_url,
@@ -207,6 +203,8 @@ def close_cafe(cafe_id):
     api_key = request.args.get('api_key')
     print(f"Your API Key is: {api_key}")
 
+    # TODO - This decision loop can become a function for easier routing readability
+
     if api_key == CAFE_API_KEY:
         print("This is the correct API KEY")
     else:
@@ -229,5 +227,6 @@ def close_cafe(cafe_id):
         ), 403
 
 
+# ---------------------------------- RUNNING ----------------------------------
 if __name__ == '__main__':
     app.run(debug=True)
