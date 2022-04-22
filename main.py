@@ -196,9 +196,21 @@ def close_cafe(cafe_id):
     key_check = True
     # TODO - Implement a query by id here. Create a function.
     # KUBINHA TIP - A NON EXISTING ID WILL RETURN "AttributeError: 'NoneType' object has no attribute 'name'"
+    # Use it as a guide!
+
     selected_cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id).first()
     print(selected_cafe.name)
-    # TODO - Implement a API Key check based on the constant.
+
+    # TODO - Implement a API Key check based on the constant. Then enter the decision loop down below
+
+    # Testing the API Key
+    api_key = request.args.get('api_key')
+    print(f"Your API Key is: {api_key}")
+
+    if api_key == CAFE_API_KEY:
+        print("This is the correct API KEY")
+    else:
+        print("You have an invalid API Key")
 
     if key_check and cafe_id:
         return jsonify(response={
