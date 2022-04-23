@@ -213,6 +213,8 @@ def close_cafe(cafe_id):
         key_check = False
 
     if key_check and cafe_id:
+        db.session.delete(selected_cafe)
+        db.session.commit()
         return jsonify(response={
             "success": "Successfully removed a closed Café!",
         }
