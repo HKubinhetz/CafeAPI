@@ -207,8 +207,10 @@ def close_cafe(cafe_id):
 
     if api_key == CAFE_API_KEY:
         print("This is the correct API KEY")
+        key_check = True
     else:
         print("You have an invalid API Key")
+        key_check = False
 
     if key_check and cafe_id:
         return jsonify(response={
