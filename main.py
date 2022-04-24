@@ -31,23 +31,25 @@ class Cafe(db.Model):
 
 
 # --------------------------------- FUNCTIONS ---------------------------------
-# Todo improve JSON types to facilitate utilisation
-def create_json(cafe):
-    if type(cafe) == list:
-        if not cafe:
-            # List is Empty = No search queries found!
-            error_json = jsonify(error={
-                "Not Found": "Sorry, no cafes were found at that location",
-            }
-            )
-            return error_json
-        else:
-            # List is not Empty!
-            cafe_json = jsonify(cafe=cafe)
-            return cafe_json
+def create_cafe_json(json_model, message):
+    # Type = Several Cafés
+    # Type = Single Café
+    # Type = Error
+    # Type = Response
+
+    if json_model == "Several":
+        cafe_json = jsonify(cafes=message)
+        return cafe_json
+
+    elif json_model == "Single":
+        cafe_json = jsonify(cafe=message)
+        return cafe_json
+
     else:
-        cafe_json = jsonify(cafe=cafe)
-    return cafe_json
+        return jsonify(error={
+            "Bad Request": "Sorry! An invalid request has been made.",
+        }
+        ), 400
 
 
 def cafe_to_dict(cafe):
@@ -88,7 +90,7 @@ def home():
 def get_random_cafe():
     query_answer = db.session.query(Cafe).all()
     random_cafe = random.choice(query_answer)
-    cafe_json = create_json(cafe_to_dict(random_cafe))
+    cafe_json = create_cafe_json(json_model="Single", message=cafe_to_dict(random_cafe))
     return cafe_json
 
 
@@ -100,7 +102,7 @@ def get_all_cafes():
     for cafe in query_answer:
         cafe_info = cafe_to_dict(cafe)
         cafe_list.append(cafe_info)
-    cafe_list_json = create_json(cafe_list)
+    cafe_list_json = create_cafe_json(json_model="Several", message=cafe_list)
 
     return cafe_list_json
 
@@ -113,7 +115,7 @@ def search_cafe():
     for cafe in query_answer:
         cafe_info = cafe_to_dict(cafe)
         cafe_list.append(cafe_info)
-    cafe_list_json = create_json(cafe_list)
+    cafe_list_json = create_cafe_json(json_model="Single", message=cafe_list)
 
     return cafe_list_json
 
@@ -149,11 +151,7 @@ def add_cafe():
     print(new_cafe)
     db.session.commit()
 
-    # TODO - Add this JSON response to the create_json in an ordely way! maybe create a "method" parameter.
-    return jsonify(response={
-        "success": "Successfully added a new cafe!",
-        }
-    )
+    return jsonify(response={"success": "Successfully added a new cafe!"})
 
 
 @app.route("/update-price/<cafe_id>", methods=["PATCH"])
@@ -173,18 +171,10 @@ def update_price(cafe_id):
         selected_cafe.coffee_price = new_price
         print(selected_cafe.coffee_price)
         db.session.commit()
-        # TODO -  Query the JSON and print it out!
-        # TODO - Add this JSON response to the create_json in an ordely way! maybe create a "method" parameter.
-        return jsonify(response={
-            "success": "Successfully updated a price for your Cafe!",
-            }
-        ), 200
+        return jsonify(response={"success": "Successfully updated a price for your Cafe!"}), 200
+
     except AttributeError:
-        # TODO - Add this JSON response to the create_json in an ordely way! maybe create a "method" parameter.
-        return jsonify(error={
-            "Not Found": "Sorry! This Cafe was not found.",
-        }
-        ), 404
+        return jsonify(error={"Not Found": "Sorry! This Cafe was not found."}), 404
 
 
 @app.route("/report-closed/<cafe_id>", methods=["DELETE"])
