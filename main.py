@@ -33,11 +33,6 @@ class Cafe(db.Model):
 
 # --------------------------------- FUNCTIONS ---------------------------------
 def create_cafe_json(json_model, message):
-    # Type = Several Cafés
-    # Type = Single Café
-    # Type = Error
-    # Type = Response
-
     if json_model == "Several":
         if not message:
             # List is Empty = No search queries found!
@@ -117,7 +112,6 @@ def confirm_delete(api_check, cafe_id_check):
 
 
 # ---------------------------------- ROUTING ----------------------------------
-
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -225,20 +219,21 @@ def close_cafe(cafe_id):
     except AttributeError:
         return jsonify(error={"Not Found": "Sorry! This Cafe was not found."}), 404
 
-    # Testing the API Key
+    # Testing the API Key and Cafe to Delete
     api_key = request.args.get('api_key')
     key_check = api_key_check(api_key)
     valid_cafe = cafe_check(cafe_id)
-
     delete_flag, delete_json, delete_http_code = confirm_delete(key_check, valid_cafe)
 
+    # Taking the decision to delete the Cafe or not
     if delete_flag:
         print("Delete cafe!")
-        # TODO - Implement deletion procedure below in routing
-        # db.session.delete(selected_cafe)
-        # db.session.commit()
+        db.session.delete(selected_cafe)
+        db.session.commit()
+        return delete_json, delete_http_code
     else:
         print("Don't delete café!")
+        return delete_json, delete_http_code
 
 
 # ---------------------------------- RUNNING ----------------------------------
