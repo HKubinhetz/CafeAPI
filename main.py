@@ -1,6 +1,7 @@
 # ---------------------------------- IMPORTS ----------------------------------
 from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import exc
 import random
 
 
@@ -38,8 +39,17 @@ def create_cafe_json(json_model, message):
     # Type = Response
 
     if json_model == "Several":
-        cafe_json = jsonify(cafes=message)
-        return cafe_json
+        if not message:
+            # List is Empty = No search queries found!
+            error_json = jsonify(error={
+                "Not Found": "Sorry, no cafes were found at that location",
+            }
+            )
+            return error_json
+
+        else:
+            cafe_json = jsonify(cafes=message)
+            return cafe_json
 
     elif json_model == "Single":
         cafe_json = jsonify(cafe=message)
@@ -115,7 +125,7 @@ def search_cafe():
     for cafe in query_answer:
         cafe_info = cafe_to_dict(cafe)
         cafe_list.append(cafe_info)
-    cafe_list_json = create_cafe_json(json_model="Single", message=cafe_list)
+    cafe_list_json = create_cafe_json(json_model="Several", message=cafe_list)
 
     return cafe_list_json
 
@@ -129,11 +139,12 @@ def add_cafe():
     cafe_img_url = request.args.get('img_url')
     cafe_location = request.args.get('location')
     cafe_seats = request.args.get('seats')
-    cafe_has_toilet = string_to_bool(request.args.get('has_toilet'))                # Special Boolean Cases
+    cafe_coffee_price = request.args.get('coffee_price')
+
+    cafe_has_toilet = string_to_bool(request.args.get('has_toilet'))
     cafe_has_wifi = string_to_bool(request.args.get('has_wifi'))
     cafe_has_sockets = string_to_bool(request.args.get('has_sockets'))
     cafe_can_take_calls = string_to_bool(request.args.get('can_take_calls'))
-    cafe_coffee_price = request.args.get('coffee_price')
 
     new_cafe = Cafe(name=cafe_name,
                     map_url=cafe_map_url,
@@ -147,11 +158,13 @@ def add_cafe():
                     coffee_price=cafe_coffee_price
                     )
 
-    db.session.add(new_cafe)
-    print(new_cafe)
-    db.session.commit()
-
-    return jsonify(response={"success": "Successfully added a new cafe!"})
+    try:
+        db.session.add(new_cafe)
+        print(new_cafe)
+        db.session.commit()
+        return jsonify(response={"success": "Successfully added a new cafe!"})
+    except exc.IntegrityError:
+        return jsonify(error={"Duplicate Café": "Sorry! This Cafe already exists in our database."}), 409
 
 
 @app.route("/update-price/<cafe_id>", methods=["PATCH"])
@@ -181,17 +194,16 @@ def update_price(cafe_id):
 def close_cafe(cafe_id):
     key_check = True
     # TODO - Implement a query by id here. Create a function.
-    # KUBINHA TIP - A NON EXISTING ID WILL RETURN "AttributeError: 'NoneType' object has no attribute 'name'"
-    # Use it as a guide!
-
-    selected_cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id).first()
-    print(selected_cafe.name)
+    try:
+        selected_cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id).first()
+        print(selected_cafe.name)
+    except AttributeError:
+        return jsonify(error={"Not Found": "Sorry! This Cafe was not found."}), 404
 
     # TODO - Implement a API Key check based on the constant. Then enter the decision loop down below
 
     # Testing the API Key
     api_key = request.args.get('api_key')
-    print(f"Your API Key is: {api_key}")
 
     # TODO - This decision loop can become a function for easier routing readability
 
