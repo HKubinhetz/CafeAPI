@@ -6,18 +6,21 @@ import random
 
 
 # --------------------------------- CONSTANTS ---------------------------------
-CAFE_API_KEY = "LoveYouBunnyPig0123"
+CAFE_API_KEY = "LoveYouBunnyPig0123"                             # An example API Key
 
 
 # --------------------------------- APP CONFIG --------------------------------
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cafes.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+app = Flask(__name__)                                           # Creating Flask Server
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cafes.db'    # Connecting Server to DB directory
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False            # Disabling non-essentials
+db = SQLAlchemy(app)                                            # Creating DB App
 
 
 # --------------------------------- CAFE CLASS --------------------------------
 class Cafe(db.Model):
+    # The cafe class is exactly what the Database consists of. This structure
+    # will be used for every CRUD (Create, Read, Update Delete) operation down the line.
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), unique=True, nullable=False)
     map_url = db.Column(db.String(500), nullable=False)
@@ -33,31 +36,41 @@ class Cafe(db.Model):
 
 # --------------------------------- FUNCTIONS ---------------------------------
 def create_cafe_json(json_model, message):
-    if json_model == "Several":
-        if not message:
-            # List is Empty = No search queries found!
-            error_json = jsonify(error={
-                "Not Found": "Sorry, no cafes were found at that location",
-            }
-            )
-            return error_json
+    # This function formats the Cafe JSONS.
+    # It returns data from one or several Cafes if valid data is received.
+    # If no Cafes are provided, it returns an error message.
 
+    # HTTP Response Codes used in this function:
+    # 200 = OK
+    # 400 = Bad Request
+    # 404 = Not Found
+
+    if json_model == "Several":
+        # "Several" = More than one Cafe in the list.
+        if not message:
+            # In python, "List is Empty" = False
+            # This means that no search queries were found!
+            error_json = jsonify(error={"Not Found": "Sorry, no cafes were found at that location"})
+            return error_json, 404
         else:
+            # Else = there are elements in the list! So "List not Empty" = True
             cafe_json = jsonify(cafes=message)
-            return cafe_json
+            return cafe_json, 200
 
     elif json_model == "Single":
+        # "Single" = A single Café in the list!
         cafe_json = jsonify(cafe=message)
-        return cafe_json
+        return cafe_json, 200
 
     else:
-        return jsonify(error={
-            "Bad Request": "Sorry! An invalid request has been made.",
-        }
-        ), 400
+        # No "Single" nor "Several" café model provided.
+        # It raises an error JSON.
+        return jsonify(error={"Bad Request": "Sorry! An invalid request has been made."}), 400
 
 
 def cafe_to_dict(cafe):
+    # A simple data manipulation function.
+    # It converts cafe info into a dictionary.
     cafe_dict = {
         "id": cafe.id,
         "name": cafe.name,
@@ -76,6 +89,13 @@ def cafe_to_dict(cafe):
 
 
 def string_to_bool(string):
+    # This function is a data conversion tool.
+    # It returns a 1 or 0 integer when it receives a
+    # 'True'/'1' or a 'False'/'0', respectively.
+
+    # It is used in the Add Café request, as the boolean
+    # entries must to be converted to the database's format.
+
     if string == "True" or string == "1":
         return 1
     elif string == "False" or string == "0":
@@ -85,6 +105,9 @@ def string_to_bool(string):
 
 
 def api_key_check(api_key):
+    # This function checks the validity of
+    # the provided API Key.
+
     if api_key == CAFE_API_KEY:
         print("This is the correct API KEY")
         return True
@@ -94,6 +117,7 @@ def api_key_check(api_key):
 
 
 def cafe_check(cafe_id):
+    # This
     if cafe_id:
         return True
     else:
@@ -121,8 +145,8 @@ def home():
 def get_random_cafe():
     query_answer = db.session.query(Cafe).all()
     random_cafe = random.choice(query_answer)
-    cafe_json = create_cafe_json(json_model="Single", message=cafe_to_dict(random_cafe))
-    return cafe_json
+    cafe_json, response_code = create_cafe_json(json_model="Single", message=cafe_to_dict(random_cafe))
+    return cafe_json, response_code
 
 
 @app.route("/all", methods=["GET", "POST"])
@@ -133,9 +157,9 @@ def get_all_cafes():
     for cafe in query_answer:
         cafe_info = cafe_to_dict(cafe)
         cafe_list.append(cafe_info)
-    cafe_list_json = create_cafe_json(json_model="Several", message=cafe_list)
+    cafe_list_json, response_code = create_cafe_json(json_model="Several", message=cafe_list)
 
-    return cafe_list_json
+    return cafe_list_json, response_code
 
 
 @app.route("/search")
@@ -154,7 +178,6 @@ def search_cafe():
 @app.route("/add", methods=["GET", "POST"])
 def add_cafe():
 
-    # TODO - Convert all these to a smaller function
     cafe_name = request.args.get('name')
     cafe_map_url = request.args.get('map_url')
     cafe_img_url = request.args.get('img_url')
@@ -185,7 +208,7 @@ def add_cafe():
         db.session.commit()
         return jsonify(response={"success": "Successfully added a new cafe!"})
     except exc.IntegrityError:
-        return jsonify(error={"Duplicate Café": "Sorry! This Cafe already exists in our database."}), 409
+        return jsonify(error={"Duplicate Cafe": "Sorry! This Cafe already exists in our database."}), 409
 
 
 @app.route("/update-price/<cafe_id>", methods=["PATCH"])
