@@ -89,6 +89,33 @@ def string_to_bool(string):
         return "String is not a valid boolean value!"
 
 
+def api_key_check(api_key):
+    if api_key == CAFE_API_KEY:
+        print("This is the correct API KEY")
+        return True
+    else:
+        print("You have an invalid API Key")
+        return False
+
+
+def cafe_check(cafe_id):
+    if cafe_id:
+        return True
+    else:
+        return False
+
+
+def confirm_delete(api_check, cafe_id_check):
+    if api_check and cafe_id_check:
+        return True, jsonify(response={"success": "Successfully removed a closed Café!"}), 200
+
+    elif not cafe_id_check:
+        return False, jsonify(error={"Not Found": "Sorry! This Cafe was not found."}), 404
+
+    elif not api_check:
+        return False, jsonify(error={"Not Allowed": "Sorry! You do not have a valid API Key to do this."}), 403
+
+
 # ---------------------------------- ROUTING ----------------------------------
 
 @app.route("/")
@@ -192,45 +219,26 @@ def update_price(cafe_id):
 
 @app.route("/report-closed/<cafe_id>", methods=["DELETE"])
 def close_cafe(cafe_id):
-    key_check = True
-    # TODO - Implement a query by id here. Create a function.
     try:
         selected_cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id).first()
         print(selected_cafe.name)
     except AttributeError:
         return jsonify(error={"Not Found": "Sorry! This Cafe was not found."}), 404
 
-    # TODO - Implement a API Key check based on the constant. Then enter the decision loop down below
-
     # Testing the API Key
     api_key = request.args.get('api_key')
+    key_check = api_key_check(api_key)
+    valid_cafe = cafe_check(cafe_id)
 
-    # TODO - This decision loop can become a function for easier routing readability
+    delete_flag, delete_json, delete_http_code = confirm_delete(key_check, valid_cafe)
 
-    if api_key == CAFE_API_KEY:
-        print("This is the correct API KEY")
-        key_check = True
+    if delete_flag:
+        print("Delete cafe!")
+        # TODO - Implement deletion procedure below in routing
+        # db.session.delete(selected_cafe)
+        # db.session.commit()
     else:
-        print("You have an invalid API Key")
-        key_check = False
-
-    if key_check and cafe_id:
-        db.session.delete(selected_cafe)
-        db.session.commit()
-        return jsonify(response={
-            "success": "Successfully removed a closed Café!",
-        }
-        ), 200
-    elif not cafe_id:
-        return jsonify(error={
-            "Not Found": "Sorry! This Cafe was not found.",
-        }
-        ), 404
-    elif not key_check:
-        return jsonify(error={
-            "Not Allowed": "Sorry! You do not have a valid API Key to do this.",
-        }
-        ), 403
+        print("Don't delete café!")
 
 
 # ---------------------------------- RUNNING ----------------------------------
