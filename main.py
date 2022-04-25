@@ -205,7 +205,13 @@ def search_cafe():
 
 @app.route("/add", methods=["GET", "POST"])
 def add_cafe():
+    # "Add Cafe" routing. It receives several arguments and then creates a Cafe
+    # object, ready to be added to the Database.
 
+    # The DB is made of string and boolean fields,
+    # so some arguments must be converted to Boolean through a function.
+
+    # Fetching strings from the request.
     cafe_name = request.args.get('name')
     cafe_map_url = request.args.get('map_url')
     cafe_img_url = request.args.get('img_url')
@@ -213,11 +219,13 @@ def add_cafe():
     cafe_seats = request.args.get('seats')
     cafe_coffee_price = request.args.get('coffee_price')
 
+    # Fetching strings from the request and converting them to booleans.
     cafe_has_toilet = string_to_bool(request.args.get('has_toilet'))
     cafe_has_wifi = string_to_bool(request.args.get('has_wifi'))
     cafe_has_sockets = string_to_bool(request.args.get('has_sockets'))
     cafe_can_take_calls = string_to_bool(request.args.get('can_take_calls'))
 
+    # Creating the Cafe Object
     new_cafe = Cafe(name=cafe_name,
                     map_url=cafe_map_url,
                     img_url=cafe_img_url,
@@ -231,34 +239,35 @@ def add_cafe():
                     )
 
     try:
-        db.session.add(new_cafe)
-        print(new_cafe)
-        db.session.commit()
+        # Creating a new Cafe to the Database.
+        db.session.add(new_cafe)        # Adding the Cafe
+        db.session.commit()             # Commiting the Change.
         return jsonify(response={"success": "Successfully added a new cafe!"})
+
     except exc.IntegrityError:
+        # If Cafe already exists, the code returns an error JSON.
         return jsonify(error={"Duplicate Cafe": "Sorry! This Cafe already exists in our database."}), 409
 
 
 @app.route("/update-price/<cafe_id>", methods=["PATCH"])
 def update_price(cafe_id):
-    # Search query by ID then print here.
-    print(cafe_id)
-    # Fetch the price arguments
+    # "Update Price" routing. It fetches Cafe ID and price arguments,
+    # then updates the DB if a valid Cafe was selected.
+
+    # Fetching the Price Argument
     new_price = request.args.get('price')
-    print(new_price)
 
     try:
-        # Query the correct Café by its id
-        selected_cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id).first()
-        print(selected_cafe.name)
-        # Update and commit!
-        print(selected_cafe.coffee_price)
-        selected_cafe.coffee_price = new_price
-        print(selected_cafe.coffee_price)
-        db.session.commit()
+        # The code now tries to update the price in the provided Cafe
+        selected_cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id).first()   # Query a Cafe
+        selected_cafe.coffee_price = new_price                                      # Updating the Price
+        db.session.commit()                                                         # Commiting the Change
+
         return jsonify(response={"success": "Successfully updated a price for your Cafe!"}), 200
 
     except AttributeError:
+        # If the Café is not found, it returns an error JSON.
+
         return jsonify(error={"Not Found": "Sorry! This Cafe was not found."}), 404
 
 
