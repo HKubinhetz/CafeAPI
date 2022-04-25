@@ -117,7 +117,8 @@ def api_key_check(api_key):
 
 
 def cafe_check(cafe_id):
-    # This
+    # This function checks the validity of
+    # the provided cafe.
     if cafe_id:
         return True
     else:
@@ -125,53 +126,80 @@ def cafe_check(cafe_id):
 
 
 def confirm_delete(api_check, cafe_id_check):
+    # This function receives the API Key and Valid Cafe checks.
+    # Then, it decides if a cafe should be deleted and acts accordingly.
+
     if api_check and cafe_id_check:
+        # All's good. Return a True flag (Good to Delete), a JSON and a 'OK' HTML Response Code
         return True, jsonify(response={"success": "Successfully removed a closed Café!"}), 200
 
     elif not cafe_id_check:
+        # Invalid Cafe. Return a False flag (Not to Delete), a JSON and a 'Not Found' HTML Response Code
         return False, jsonify(error={"Not Found": "Sorry! This Cafe was not found."}), 404
 
     elif not api_check:
+        # Invalid API Key. Return a False flag (Not to Delete), a JSON and a 'Forbidden' HTML Response Code
         return False, jsonify(error={"Not Allowed": "Sorry! You do not have a valid API Key to do this."}), 403
 
 
 # ---------------------------------- ROUTING ----------------------------------
 @app.route("/")
 def home():
+    # Default routing, renders a simple template.
     return render_template("index.html")
 
 
-@app.route("/random", methods=["GET", "POST"])
+@app.route("/random")
 def get_random_cafe():
-    query_answer = db.session.query(Cafe).all()
-    random_cafe = random.choice(query_answer)
+    # "Random Cafe" routing, queries the DB for a random Cafe.
+    # It fetches all data from the database, then randomly
+    # chooses one row through python's random library.
+
+    query_answer = db.session.query(Cafe).all()         # Querying all Cafes
+    random_cafe = random.choice(query_answer)           # Randomly choosing one of them
+
+    # Creating and returning a Cafe JSON through a function
     cafe_json, response_code = create_cafe_json(json_model="Single", message=cafe_to_dict(random_cafe))
     return cafe_json, response_code
 
 
-@app.route("/all", methods=["GET", "POST"])
+@app.route("/all")
 def get_all_cafes():
-    query_answer = db.session.query(Cafe).all()
-    cafe_list = []
+    # "All Cafes" routing, queries the DB for all data,
+    # then formats the rows into a JSON and returns it
+    # to the requesting entity.
+
+    query_answer = db.session.query(Cafe).all()         # Querying all Cafes
+    cafe_list = []                                      # Creating an empty list to be populated with Cafes
 
     for cafe in query_answer:
+        # For every Cafe on the database, convert it into a dictionary and add into the list.
         cafe_info = cafe_to_dict(cafe)
         cafe_list.append(cafe_info)
-    cafe_list_json, response_code = create_cafe_json(json_model="Several", message=cafe_list)
 
+    # Converting the list into a JSON and finally returning it to the requesting entity.
+    cafe_list_json, response_code = create_cafe_json(json_model="Several", message=cafe_list)
     return cafe_list_json, response_code
 
 
 @app.route("/search")
 def search_cafe():
-    location = request.args.get('location')
-    query_answer = db.session.query(Cafe).filter(Cafe.location == location).all()
-    cafe_list = []
+    # "Search Cafe" routing, very similar to the "All Cafes" routing.
+    # Queries the DB for all data, but filters it based on provided "location".
+    # The function then formats the rows into a JSON and returns it
+    # to the requesting entity.
+
+    location = request.args.get('location')                                             # Request search parameters.
+    query_answer = db.session.query(Cafe).filter(Cafe.location == location).all()       # Filtering the query.
+    cafe_list = []                                                                      # Empty List to be populated
+
     for cafe in query_answer:
+        # For every Cafe on the database, convert it into a dictionary and add into the list.
         cafe_info = cafe_to_dict(cafe)
         cafe_list.append(cafe_info)
-    cafe_list_json = create_cafe_json(json_model="Several", message=cafe_list)
 
+    # Converting the list into a JSON and finally returning it to the requesting entity.
+    cafe_list_json = create_cafe_json(json_model="Several", message=cafe_list)
     return cafe_list_json
 
 
@@ -236,26 +264,33 @@ def update_price(cafe_id):
 
 @app.route("/report-closed/<cafe_id>", methods=["DELETE"])
 def close_cafe(cafe_id):
+    # "Close Cafe" routing. It deletes a closed Cafe, but only if the request is valid.
+    # It first checks if the provided Cafe and API Key are valid.
+
     try:
+        # Checking if the Cafe exists by querying it from the Database
         selected_cafe = db.session.query(Cafe).filter(Cafe.id == cafe_id).first()
-        print(selected_cafe.name)
+
     except AttributeError:
+        # If this exception is raised, Cafe doesn't exist!
         return jsonify(error={"Not Found": "Sorry! This Cafe was not found."}), 404
 
     # Testing the API Key and Cafe to Delete
-    api_key = request.args.get('api_key')
-    key_check = api_key_check(api_key)
-    valid_cafe = cafe_check(cafe_id)
+    api_key = request.args.get('api_key')       # Grabbing the key from the request
+    key_check = api_key_check(api_key)          # Checking if key is valid
+    valid_cafe = cafe_check(cafe_id)            # Checking if cafe is valid
+
+    # Function that confirms if it is okay to delete Cafe, based on the checks up above.
     delete_flag, delete_json, delete_http_code = confirm_delete(key_check, valid_cafe)
 
-    # Taking the decision to delete the Cafe or not
+    # Taking the decision to delete the Cafe or not, based on confirm_delete function
     if delete_flag:
-        print("Delete cafe!")
-        db.session.delete(selected_cafe)
-        db.session.commit()
+        # If deletion request is valid
+        db.session.delete(selected_cafe)        # Deletes Cafe
+        db.session.commit()                     # Commits the Change
         return delete_json, delete_http_code
     else:
-        print("Don't delete café!")
+        # If deletion request is invalid
         return delete_json, delete_http_code
 
 
