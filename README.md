@@ -3,4 +3,4 @@
 
 This is an API that fetches Cafes from a Database and performs all CRUD operations, such as searching for Cafés, fetching the entire list, adding or deleting a Cafe and changing its price.
 
-[##API Docs](https://documenter.getpostman.com/view/20574814/UyrDCvKL)
+[API Docs](https://documenter.getpostman.com/view/20574814/UyrDCvKL)
